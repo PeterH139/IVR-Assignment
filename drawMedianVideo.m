@@ -11,6 +11,7 @@ figure(2); h1 = imshow(frame);
 hold on;
 prev_pos = plot(0,0);
 hold off;
+toDelete = 0;
 
 
 % This is our main loop over each frame
@@ -25,7 +26,7 @@ for k = 250 : size(filenames,1)
     % blur over the image beforehand to smooth)
     binary_frame = makeBinaryFrame(frame);
     
-    %masked_frame = current_frame .* uint8(binary_frame);
+    masked_frame = current_frame .* uint8(binary_frame);
     
     % get the region information from the frame.
     % this also performs the 'erode' function to eliminate
@@ -33,11 +34,16 @@ for k = 250 : size(filenames,1)
     region_data = getRegionData(binary_frame);
        
     [n m] = size(region_data);
-    centroid = [];
-    if (n >= 1)
+    centroid_list = [];
+    
+    if (toDelete)
         delete(prev_pos);
+        toDelete = 0;
+    end
+    
+    if (n >= 1)
         for i = 1 : n
-            centroid_list = [region_data(i).Centroid;centroid];
+            centroid_list = [region_data(i).Centroid;centroid_list];
         end
         xs = centroid_list(:,1);
         ys = centroid_list(:,2);
@@ -45,9 +51,10 @@ for k = 250 : size(filenames,1)
         hold on;
         prev_pos = plot(xs,ys,'o');
         hold off;
+        toDelete = 1;
     end
     
-    set(h1, 'CData', current_frame);
+    set(h1, 'CData', masked_frame);
 
     drawnow('expose');
     
