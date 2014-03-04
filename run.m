@@ -7,7 +7,7 @@ FRAME_HEIGHT = 480;
 FRAME_WIDTH = 640;
 
 
-% Initialise
+% Initialisation
 file_dir = 'data/1/'; % put here one of the folder locations with images;
 filenames = dir([file_dir '*.jpg']);
 
@@ -19,8 +19,11 @@ prev_pos = plot(0,0);
 kek_plot = plot(0,0);
 hold off;
 toDelete = 0;
-blur = fspecial('motion');
 
+previous_objects = [];
+ 
+% Using motion blur at the moment. Also tried Gaussian.
+blur = fspecial('motion');
 
 top_height = zeros(200);
 plotted_kek = zeros(2);
@@ -33,7 +36,7 @@ for k = 250 : size(filenames,1)
     % perform background subtraction
     frame = subtractMedian(median, current_frame);
         
-    % performs a gaussian blur over the image to smooth
+    % performs a blur over the image to smooth
     blured_frame = imfilter(frame,blur,'same');
     
     % make the frame black and white 
@@ -49,6 +52,8 @@ for k = 250 : size(filenames,1)
     centroid_list = [];
     isCircle = [];
     
+    % Clear the list of objects detected in the current frame
+    current_objects = [];
     
     if (toDelete)
         delete(prev_pos);
@@ -57,11 +62,20 @@ for k = 250 : size(filenames,1)
     end
     
     if (n >= 1)
-        % for each object
+        % for each object detected
         for i = 1 : n
-            
+            % determine the average colour of the object
+            avg_colour = getAverageNormalisedColour(region_data(i).PixelList, current_frame);
             % get the centroid of the object
             centroid = region_data(i).Centroid;
+            % determine if it is a ball
+            isBall = (region_data(i).ConvexArea/region_data(i).Area) <= CONVEXITY_THRESH;
+            % Create a new object struct
+            s = struct('Colour',avg_colour,'Position',centroid,'IsBall',isBall);
+            % Add it to the objects detected in this frame
+            current_objects = [current_objects;s];
+            
+            % LEGACY CODE
             % add the centroid to the list of centroids for that object
             centroid_list = [region_data(i).Centroid;centroid_list];
             
@@ -74,6 +88,9 @@ for k = 250 : size(filenames,1)
             % for that object
             centroid_hist(k,:,i) = centroid;
         end
+        
+        % Match the current objects with the objects detected previously
+        current_objects = matchObjects(current_objects, previous_objects);
         
         xs = centroid_list(:,1);
         ys = centroid_list(:,2);
@@ -102,9 +119,15 @@ for k = 250 : size(filenames,1)
         prev_cir = plot(cxs,cys,'o','MarkerSize',50,'MarkerEdgeColor','g','LineWidth',3);
         hold off;
         toDelete = 1;
+    else
+        % Things specific to when there are no objects on screen go here
     end
     
     set(h1, 'CData', frame);
     drawnow('expose');  
     disp(['showing frame ' num2str(k)]);
+    
+    % Set the current object list to be the previous object list since we
+    % are now finished with it
+    previous_objects = current_objects;
 end

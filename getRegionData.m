@@ -7,7 +7,7 @@ function [ out ] = getRegionData( frame )
     twod_binary_frame = bwmorph(twod_binary_frame,'erode',1);
 
     I = logical(twod_binary_frame);
-    out = regionprops(I,'Centroid','Area','ConvexArea');
+    out = regionprops(I,'Centroid','Area','ConvexArea','PixelList');
 
 end
 
