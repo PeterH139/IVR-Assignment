@@ -10,11 +10,13 @@ frame = imread([file_dir filenames(1).name]);
 figure(2); h1 = imshow(frame);
 hold on;
 prev_pos = plot(0,0);
+kek_plot = plot(0,0);
 hold off;
 toDelete = 0;
 blur = fspecial('gaussian',5,2);
 
 top_kek = 0;
+plotted_kek = zeros(2);
 centroid_hist = zeros(1000,2,2);
 % This is our main loop over each frame
 for k = 250 : size(filenames,1)
@@ -64,7 +66,7 @@ for k = 250 : size(filenames,1)
         % check for the top position of the kek
         if (centroid_hist(k,2,1) < centroid_hist(k-1,2,1))
             top_kek = centroid_hist(k,2,1);
-        else
+            delete(kek_plot)
             hold on;
             kek_plot = plot(centroid_hist(k,1,1), centroid_hist(k,2,1), 'x');
             hold off;
