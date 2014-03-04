@@ -14,7 +14,8 @@ hold off;
 toDelete = 0;
 blur = fspecial('gaussian',5,2);
 
-
+top_kek = 0;
+centroid_hist = zeros(1000,2,2);
 % This is our main loop over each frame
 for k = 250 : size(filenames,1)
     % read the frame
@@ -48,14 +49,26 @@ for k = 250 : size(filenames,1)
     
     if (n >= 1)
         for i = 1 : n
+            centroid = region_data(i).Centroid;
             centroid_list = [region_data(i).Centroid;centroid_list];
             convexity = region_data(i).ConvexArea/region_data(i).Area;
             isCircle = [(convexity <= CONVEXITY_THRESH);isCircle];
+            centroid_hist(k,:,i) = centroid;
         end
+        
         xs = centroid_list(:,1);
         ys = centroid_list(:,2);
         cxs = isCircle .* xs;
         cys = isCircle .* ys;
+        
+        % check for the top position of the kek
+        if (centroid_hist(k,2,1) < centroid_hist(k-1,2,1))
+            top_kek = centroid_hist(k,2,1);
+        else
+            hold on;
+            kek_plot = plot(centroid_hist(k,1,1), centroid_hist(k,2,1), 'x');
+            hold off;
+        end
                     
         hold on;
         prev_pos = plot(xs,ys,'o');
