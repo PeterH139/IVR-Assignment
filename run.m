@@ -2,7 +2,7 @@
 CONVEXITY_THRESH = 1.05;
 
 % Initialise
-file_dir = 'data/4/'; % put here one of the folder locations with images;
+file_dir = 'data/1/'; % put here one of the folder locations with images;
 filenames = dir([file_dir '*.jpg']);
 
 median = getMedianFrame(file_dir,1);
@@ -12,7 +12,7 @@ hold on;
 prev_pos = plot(0,0);
 hold off;
 toDelete = 0;
-blur = fspecial('gaussian',5,2);
+blur = fspecial('motion');
 
 top_kek = 0;
 centroid_hist = zeros(1000,2,2);
@@ -77,7 +77,7 @@ for k = 250 : size(filenames,1)
         toDelete = 1;
     end
     
-    set(h1, 'CData', current_frame);
+    set(h1, 'CData', frame);
     drawnow('expose');  
     disp(['showing frame ' num2str(k)]);
 end
