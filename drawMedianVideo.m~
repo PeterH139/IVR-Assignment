@@ -53,10 +53,9 @@ for k = 250 : size(filenames,1)
         ys = centroid_list(:,2);
         
         if (centroid_hist(k,2,1) > centroid_hist(k-1,2,1))
-            disp(['top kek at :' num2str(top_kek)])
+            disp(['top kek at :' num2str(centroid_hist(k,2,1))])
         else
-            top_kek = centroid_hist(k,2,1);
-        end
+            top_kek = centroid_hist(
             
         hold on;
         prev_pos = plot(xs,ys,'o');
