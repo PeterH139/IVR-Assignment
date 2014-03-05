@@ -18,6 +18,7 @@ figure(2); h1 = imshow(frame);
 hold on;
 prev_pos = plot(0,0);
 kek_plot = plot(0,0);
+path_plot = plot(0,0);
 hold off;
 toDelete = 0;
 
@@ -113,6 +114,7 @@ for k = 1 : size(filenames,1)
         if (toDelete)
             delete(prev_pos);
             delete(prev_cir);
+            delete(path_plot);
             toDelete = 0;
         end
         
@@ -120,16 +122,19 @@ for k = 1 : size(filenames,1)
         ys = [];
         cxs = [];
         cys = [];
+        xposs = [];
+        yposs = [];
         for i = 1 : size(current_objects)
             cur = current_objects(i);
-            if (cur.IsActive)
+            disp(cur.IsActive);
+            if (cur.IsActive == 1)
                 % draw the paths
-                [row col xposs] = find(cur.Positions(:,1));
-                [row col yposs] = find(cur.Positions(:,2));
-                hold on;
-                plot(xposs,yposs);
-                hold off;
+                [row col xpos] = find(cur.Positions(:,1));
+                [row col ypos] = find(cur.Positions(:,2));
                 
+                xposs = [xposs; xpos];
+                yposs = [yposs; ypos];
+               
                 xs = [xs;cur.Position(1)];
                 ys = [ys;cur.Position(2)];
                 if(cur.IsBall)
@@ -142,13 +147,14 @@ for k = 1 : size(filenames,1)
         hold on;
         prev_pos = plot(xs,ys,'o');
         prev_cir = plot(cxs,cys,'o','MarkerSize',50,'MarkerEdgeColor','g','LineWidth',3);
+        path_plot = plot(xposs,yposs);
         hold off;
         toDelete = 1;
     else
         % Things specific to when there are no objects on screen go here
     end
     
-    set(h1, 'CData', current_frame);
+    set(h1, 'CData', binary_frame);
     drawnow('expose');  
     disp(['showing frame ' num2str(k)]);
     %disp(num2str(current_objects(1).MaxHeight));
