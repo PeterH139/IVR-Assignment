@@ -31,15 +31,22 @@ for i = 1 : size(current_objects,1)
         prev = previous_objects(j);
         position_diff = cur.Position - prev.Position;
         colour_diff = cur.Colour - prev.Colour;
+        % if the object is the same then
         if (hypot(position_diff(1),position_diff(2)) < DIST_THRESH && hypot(colour_diff(1),colour_diff(2)) < COLOUR_THRESH)
+            % update the position
             new_objects(j) = cur;
+            % check the max height
             new_objects(j).MaxHeight(2) = min([cur.Position(2) prev.MaxHeight(2)]);
             if (new_objects(j).MaxHeight(2) == prev.MaxHeight(2))
                 new_objects(j).MaxHeight(1) = prev.MaxHeight(1);
             else
                 new_objects(j).MaxHeight(1) = cur.Position(1);
             end
-            match_found = 1;
+            
+            % add the position to the history of positions
+            new_objects(j).Positions = [prev.Positions ; new_objects(j).Position];
+            
+            match_found = 1;       
             break;
         end
     end

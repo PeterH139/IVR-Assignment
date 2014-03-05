@@ -9,7 +9,7 @@ FRAME_WIDTH = 640;
 
 
 % Initialisation
-file_dir = 'data/2/'; % put here one of the folder locations with images;
+file_dir = 'data/3/'; % put here one of the folder locations with images;
 filenames = dir([file_dir '*.jpg']);
 
 median = getMedianFrame(file_dir,1);
@@ -51,7 +51,6 @@ for k = 1 : size(filenames,1)
        
     
     [n m] = size(region_data);
-    centroid_list = [];
     isCircle = [];
     
     % Clear the list of objects detected in the current frame
@@ -69,13 +68,9 @@ for k = 1 : size(filenames,1)
             % determine if it is a ball
             isBall = ((region_data(i).ConvexArea/region_data(i).Area) <= CONVEXITY_THRESH) & (region_data(i).Eccentricity <= ECCENTRICITY_THRESH);
             % Create a new object struct
-            s = struct('Colour',avg_colour,'Position',centroid,'IsBall',isBall,'IsActive',1,'MaxHeight',[0 500]);
+            s = struct('Colour',avg_colour,'Position',centroid,'IsBall',isBall,'IsActive',1,'MaxHeight',[0 500],'Positions',centroid);
             % Add it to the objects detected in this frame
             current_objects = [current_objects;s];
-            
-            % LEGACY CODE
-            % add the centroid to the list of centroids for that object
-            centroid_list = [region_data(i).Centroid;centroid_list];
             
             % check if the object is a circle
             % can we do more than just convexity?
@@ -96,12 +91,13 @@ for k = 1 : size(filenames,1)
             has_changed = 0;
             for i = 1 : size(current_objects)
                 cur = current_objects(i);
-                if (cur.IsActive && cur.IsBall)
+                if (cur.IsActive && cur.IsBall && length(previous_objects) >= i)
                     if (cur.MaxHeight(2) == previous_objects(i).MaxHeight(2))
+            
                         to_plot = [to_plot;cur.MaxHeight];
                         has_changed = 1;
                         if(cur.MaxHeight(2) > previous_objects(i).Position(2) - 0.1)
-                            pause(3);
+                            %pause(3);
                         end
                     end
                 end
@@ -127,6 +123,13 @@ for k = 1 : size(filenames,1)
         for i = 1 : size(current_objects)
             cur = current_objects(i);
             if (cur.IsActive)
+                % draw the paths
+                [row col xposs] = find(cur.Positions(:,1));
+                [row col yposs] = find(cur.Positions(:,2));
+                hold on;
+                plot(xposs,yposs);
+                hold off;
+                
                 xs = [xs;cur.Position(1)];
                 ys = [ys;cur.Position(2)];
                 if(cur.IsBall)
