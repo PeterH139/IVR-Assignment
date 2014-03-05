@@ -72,15 +72,6 @@ for k = 1 : size(filenames,1)
             s = struct('Colour',avg_colour,'Position',centroid,'IsBall',isBall,'IsActive',1,'MaxHeight',[0 500],'Positions',centroid);
             % Add it to the objects detected in this frame
             current_objects = [current_objects;s];
-            
-            % check if the object is a circle
-            % can we do more than just convexity?
-            convexity = region_data(i).ConvexArea/region_data(i).Area;
-            isCircle = [(convexity <= CONVEXITY_THRESH);isCircle];
-            
-            % add the centroid to the historical list of centroids
-            % for that object
-            centroid_hist(k,:,i) = centroid;
         end
         
         % Match the current objects with the objects detected previously
@@ -94,10 +85,9 @@ for k = 1 : size(filenames,1)
                 cur = current_objects(i);
                 if (cur.IsActive && cur.IsBall && length(previous_objects) >= i)
                     if (cur.MaxHeight(2) == previous_objects(i).MaxHeight(2))
-            
                         to_plot = [to_plot;cur.MaxHeight];
                         has_changed = 1;
-                        if(cur.MaxHeight(2) > previous_objects(i).Position(2) - 0.1)
+                        if( cur.MaxHeight(2) > previous_objects(i).Position(2) - 0.1)
                             %pause(3);
                         end
                     end
