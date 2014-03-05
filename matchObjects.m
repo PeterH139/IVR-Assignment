@@ -6,8 +6,8 @@ function [ new_objects ] = matchObjects( current_objects, previous_objects )
 
 % Any new objects found are added at the end of the new list.
 
-DIST_THRESH = 100;
-COLOUR_THRESH = 100;
+DIST_THRESH = 25;
+COLOUR_THRESH = 25;
    
 % Initialize all the previous objects to not be active;
 for i = 1 : size(previous_objects)
