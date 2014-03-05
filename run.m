@@ -1,5 +1,6 @@
 % Constants
 CONVEXITY_THRESH = 1.05;
+ECCENTRICITY_THRESH = 1;
 
 MAX_OBJECTS = 2; % max at any one time
 
@@ -8,7 +9,7 @@ FRAME_WIDTH = 640;
 
 
 % Initialisation
-file_dir = 'data/1/'; % put here one of the folder locations with images;
+file_dir = 'data/2/'; % put here one of the folder locations with images;
 filenames = dir([file_dir '*.jpg']);
 
 median = getMedianFrame(file_dir,1);
@@ -20,6 +21,7 @@ kek_plot = plot(0,0);
 hold off;
 toDelete = 0;
 
+
 previous_objects = [];
  
 % Using motion blur at the moment. Also tried Gaussian.
@@ -29,7 +31,7 @@ top_height = zeros(200);
 plotted_kek = zeros(2);
 centroid_hist = zeros(1000,2,2);
 % This is our main loop over each frame
-for k = 250 : size(filenames,1)
+for k = 1 : size(filenames,1)
     % read the frame
     current_frame = imread([file_dir filenames(k).name]);
 
@@ -55,11 +57,7 @@ for k = 250 : size(filenames,1)
     % Clear the list of objects detected in the current frame
     current_objects = [];
     
-    if (toDelete)
-        delete(prev_pos);
-        delete(prev_cir);
-        toDelete = 0;
-    end
+   
     
     if (n >= 1)
         % for each object detected
@@ -69,9 +67,9 @@ for k = 250 : size(filenames,1)
             % get the centroid of the object
             centroid = region_data(i).Centroid;
             % determine if it is a ball
-            isBall = (region_data(i).ConvexArea/region_data(i).Area) <= CONVEXITY_THRESH;
+            isBall = ((region_data(i).ConvexArea/region_data(i).Area) <= CONVEXITY_THRESH) & (region_data(i).Eccentricity <= ECCENTRICITY_THRESH);
             % Create a new object struct
-            s = struct('Colour',avg_colour,'Position',centroid,'IsBall',isBall);
+            s = struct('Colour',avg_colour,'Position',centroid,'IsBall',isBall,'IsActive',1,'MaxHeight',[0 500]);
             % Add it to the objects detected in this frame
             current_objects = [current_objects;s];
             
@@ -91,26 +89,50 @@ for k = 250 : size(filenames,1)
         
         % Match the current objects with the objects detected previously
         current_objects = matchObjects(current_objects, previous_objects);
-        
-        xs = centroid_list(:,1);
-        ys = centroid_list(:,2);
-        cxs = isCircle .* xs;
-        cys = isCircle .* ys;
-        
+         
         % check for the top position of each object
-        for i = 1 : n
-            % if the current frame is higher
-            if (FRAME_HEIGHT - centroid_hist(k,2,i) > FRAME_HEIGHT - top_height(i))
-                % set the current frame to be highest
-                top_height(i) = centroid_hist(k,2,1);
-                
-                % draw the new highest
-                delete(kek_plot)
-                hold on;
-                    if (i <= 2)
-                        kek_plot = plot(centroid_hist(k,1,i), centroid_hist(k,2,i), 'x');
+        if (size(previous_objects,1) > 0)
+            to_plot = [];
+            has_changed = 0;
+            for i = 1 : size(current_objects)
+                cur = current_objects(i);
+                if (cur.IsActive && cur.IsBall)
+                    if (cur.MaxHeight(2) == previous_objects(i).MaxHeight(2))
+                        to_plot = [to_plot;cur.MaxHeight];
+                        has_changed = 1;
+                        if(cur.MaxHeight(2) > previous_objects(i).Position(2) - 0.1)
+                            pause(3);
+                        end
                     end
+                end
+            end
+            if (has_changed)
+                delete(kek_plot);
+                hold on;
+                kek_plot = plot(to_plot(:,1),to_plot(:,2),'x','MarkerSize',20,'MarkerEdgeColor','r','LineWidth',2);
                 hold off;
+            end
+        end
+        
+        if (toDelete)
+            delete(prev_pos);
+            delete(prev_cir);
+            toDelete = 0;
+        end
+        
+        xs = [];
+        ys = [];
+        cxs = [];
+        cys = [];
+        for i = 1 : size(current_objects)
+            cur = current_objects(i);
+            if (cur.IsActive)
+                xs = [xs;cur.Position(1)];
+                ys = [ys;cur.Position(2)];
+                if(cur.IsBall)
+                    cxs = [cxs; cur.Position(1)];
+                    cys = [cys; cur.Position(2)];
+                end
             end
         end
                     
@@ -123,9 +145,10 @@ for k = 250 : size(filenames,1)
         % Things specific to when there are no objects on screen go here
     end
     
-    set(h1, 'CData', frame);
+    set(h1, 'CData', current_frame);
     drawnow('expose');  
     disp(['showing frame ' num2str(k)]);
+    %disp(num2str(current_objects(1).MaxHeight));
     
     % Set the current object list to be the previous object list since we
     % are now finished with it

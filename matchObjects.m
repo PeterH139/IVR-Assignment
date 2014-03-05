@@ -6,10 +6,20 @@ function [ new_objects ] = matchObjects( current_objects, previous_objects )
 
 % Any new objects found are added at the end of the new list.
 
-DIST_THRESH = 10;
-COLOUR_THRESH = 10;
+DIST_THRESH = 100;
+COLOUR_THRESH = 100;
+   
+% Initialize all the previous objects to not be active;
+for i = 1 : size(previous_objects)
+    previous_objects(i).IsActive = 0;
+end
 
 new_objects = previous_objects;
+
+% If we haven't seent any objects this frame, just ignore and move on.
+if(size(current_objects) == 0)
+    return;
+end
 
 % For each of the currently detected objects in the scene.
 for i = 1 : size(current_objects,1)
@@ -22,7 +32,13 @@ for i = 1 : size(current_objects,1)
         position_diff = cur.Position - prev.Position;
         colour_diff = cur.Colour - prev.Colour;
         if (hypot(position_diff(1),position_diff(2)) < DIST_THRESH && hypot(colour_diff(1),colour_diff(2)) < COLOUR_THRESH)
-            new_objects(j) = current_objects(i);
+            new_objects(j) = cur;
+            new_objects(j).MaxHeight(2) = min([cur.Position(2) prev.MaxHeight(2)]);
+            if (new_objects(j).MaxHeight(2) == prev.MaxHeight(2))
+                new_objects(j).MaxHeight(1) = prev.MaxHeight(1);
+            else
+                new_objects(j).MaxHeight(1) = cur.Position(1);
+            end
             match_found = 1;
             break;
         end
