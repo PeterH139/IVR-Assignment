@@ -32,7 +32,7 @@ top_height = zeros(200);
 plotted_kek = zeros(2);
 centroid_hist = zeros(1000,2,2);
 % This is our main loop over each frame
-for k = 1 : size(filenames,1)
+for k = 250 : size(filenames,1)
     % read the frame
     current_frame = imread([file_dir filenames(k).name]);
 
@@ -144,7 +144,7 @@ for k = 1 : size(filenames,1)
         % Things specific to when there are no objects on screen go here
     end
     
-    set(h1, 'CData', binary_frame);
+    set(h1, 'CData', current_frame);
     drawnow('expose');  
     disp(['showing frame ' num2str(k)]);
     %disp(num2str(current_objects(1).MaxHeight));
